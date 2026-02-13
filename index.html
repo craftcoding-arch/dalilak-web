@@ -1,0 +1,1239 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<title>دليل الأماكن</title>
+
+<!-- PWA Meta Tags -->
+<meta name="theme-color" content="#2563eb">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="manifest.json">
+
+<!-- Leaflet -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap');
+
+:root{
+  --main:#2563eb;
+  --bg:#f4f6f8;
+  --card:#ffffff;
+  --text:#1f2937;
+  --muted:#6b7280;
+  --accent:#10b981;
+  --success:#22c55e;
+  --warning:#f59e0b;
+  --danger:#ef4444;
+  --border:#e5e7eb;
+}
+
+/* Dark Mode Variables */
+body.dark,
+body{
+  --bg:#0f172a;
+  --card:#1e293b;
+  --text:#e5e7eb;
+  --muted:#94a3b8;
+  --border:#334155;
+}
+
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  font-family: "Cairo", "Segoe UI", Tahoma, sans-serif;
+  direction: rtl;
+  background:var(--bg);
+  color:var(--text);
+  transition:background 0.3s, color 0.3s;
+}
+
+/* ---------- HEADER ---------- */
+header{
+  background:var(--main);
+  color:#fff;
+  padding:12px 15px;
+  text-align:center;
+  font-size:18px;
+  font-weight:600;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+}
+
+.brand{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  font-weight:700;
+}
+
+.brand img{
+  width:32px;
+  height:32px;
+  border-radius:8px;
+  object-fit:cover;
+}
+
+.header-buttons{
+  display:flex;
+  gap:10px;
+}
+
+.welcome-bar{
+  background:rgba(255,255,255,0.08);
+  color:#fff;
+  text-align:center;
+  padding:8px 12px;
+  font-size:14px;
+  font-weight:600;
+  overflow:hidden;
+  white-space:nowrap;
+  border-bottom:1px solid rgba(255,255,255,0.15);
+}
+
+.welcome-text{
+  display:inline-block;
+  animation:welcome-marquee 12s linear infinite;
+}
+
+@keyframes welcome-marquee{
+  0%{transform:translateX(100%)}
+  100%{transform:translateX(-100%)}
+}
+
+.theme-btn{
+  background:rgba(255,255,255,0.2);
+  border:none;
+  color:white;
+  width:40px;
+  height:40px;
+  border-radius:50%;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:18px;
+}
+
+.download-btn{
+  background:linear-gradient(135deg, #f59e0b, #f97316);
+  color:#111827;
+  border:none;
+  padding:8px 12px;
+  border-radius:999px;
+  font-size:13px;
+  font-weight:700;
+  cursor:pointer;
+  box-shadow:0 6px 14px rgba(249,115,22,0.35);
+}
+
+.download-btn:hover{
+  transform:translateY(-1px);
+  box-shadow:0 10px 18px rgba(249,115,22,0.45);
+}
+
+/* ---------- COMMON ---------- */
+.page{padding:15px}
+.hidden{display:none}
+
+.details-card{
+  max-width:560px;
+  margin:20px auto 40px;
+  background:var(--card);
+  border:2px solid var(--border);
+  border-radius:16px;
+  padding:16px;
+  box-shadow:0 6px 20px rgba(0,0,0,0.15);
+}
+
+@media (max-width: 600px){
+  header{
+    padding:10px 12px;
+    font-size:16px;
+  }
+
+  .brand img{
+    width:28px;
+    height:28px;
+  }
+
+  .page{
+    padding:12px;
+  }
+
+  .details-card{
+    margin:12px auto 24px;
+    padding:12px;
+  }
+
+  .grid{
+    grid-template-columns:repeat(auto-fill,minmax(130px,1fr));
+  }
+
+  .subcategory-grid{
+    grid-template-columns:repeat(auto-fill,minmax(120px,1fr));
+  }
+
+  .places-grid{
+    grid-template-columns:repeat(auto-fit,120px);
+    gap:6px;
+  }
+
+  .places-grid .item{
+    width:120px;
+    height:120px;
+    padding:10px;
+  }
+
+  .search-box{
+    font-size:14px;
+    padding:12px 14px;
+  }
+
+  .btn{
+    font-size:14px;
+    padding:9px 12px;
+  }
+}
+
+/* ---------- LOADING SKELETON ---------- */
+.skeleton{
+  animation:skeleton-loading 1.5s infinite;
+  background:linear-gradient(90deg, var(--border) 25%, #f0f0f0 50%, var(--border) 75%);
+  background-size:200% 100%;
+}
+
+@keyframes skeleton-loading{
+  0%{background-position:200% 0}
+  100%{background-position:-200% 0}
+}
+
+.skeleton-item{
+  height:80px;
+  border-radius:14px;
+  margin-bottom:10px;
+}
+
+.skeleton-card{
+  height:100px;
+  border-radius:14px;
+}
+
+/* ---------- SEARCH ---------- */
+.search-container{
+  margin:15px 0 20px 0;
+  position:relative;
+  display:flex;
+  gap:10px;
+}
+
+.search-box{
+  flex:1;
+  padding:14px 20px;
+  border:2px solid var(--border);
+  border-radius:12px;
+  font-size:16px;
+  background:var(--card);
+  color:var(--text);
+  transition:.2s;
+}
+
+.search-box:focus{
+  outline:none;
+  border-color:var(--main);
+}
+
+.search-results{
+  max-height:300px;
+  overflow-y:auto;
+  margin-top:10px;
+  border-radius:10px;
+  background:var(--card);
+  box-shadow:0 4px 20px rgba(0,0,0,0.15);
+  display:none;
+  position:absolute;
+  width:100%;
+  z-index:1000;
+  border:1px solid var(--border);
+}
+
+.search-result-item{
+  padding:12px 15px;
+  border-bottom:1px solid var(--border);
+  cursor:pointer;
+  transition:.2s;
+}
+
+.search-result-item:hover{
+  background:rgba(37,99,235,0.1);
+}
+
+.search-result-category{
+  font-size:12px;
+  color:var(--muted);
+  margin-top:3px;
+}
+
+/* ---------- BADGES ---------- */
+.badge{
+  display:inline-block;
+  padding:3px 8px;
+  border-radius:20px;
+  font-size:12px;
+  font-weight:600;
+  margin-right:5px;
+}
+
+.badge-open{
+  background:var(--success);
+  color:white;
+}
+
+.badge-closed{
+  background:var(--danger);
+  color:white;
+}
+
+
+/* ---------- CATEGORIES ---------- */
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(150px,1fr));
+  gap:12px;
+}
+
+.card{
+  background:var(--card);
+  padding:20px 10px;
+  border-radius:14px;
+  text-align:center;
+  cursor:pointer;
+  box-shadow:0 4px 12px rgba(0,0,0,.06);
+  transition:.2s;
+  font-weight:500;
+  border:2px solid transparent;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:8px;
+}
+.card:hover{
+  transform:translateY(-3px);
+  border-color:var(--main);
+  box-shadow:0 8px 20px rgba(0,0,0,0.1);
+}
+
+.card-icon{
+  font-size:24px;
+  opacity:0.8;
+}
+
+.subcategory-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(140px,1fr));
+  gap:10px;
+}
+
+/* ---------- PLACES GRID ---------- */
+.places-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,140px);
+  gap:4px;
+  justify-content:center;
+}
+
+.places-grid .item{
+  margin-bottom:0;
+  width:140px;
+  height:140px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  padding:12px;
+  gap:10px;
+}
+
+.places-grid .item-name{
+  font-size:12px;
+  line-height:1.2;
+  text-align:center;
+  white-space:normal;
+  overflow:visible;
+}
+
+.places-grid .item-status{
+  display:flex;
+  justify-content:center;
+}
+
+.places-grid .item-footer{
+  font-size:12px;
+}
+
+.places-grid .item:hover{
+  transform:translateY(-3px);
+}
+
+/* ---------- PLACES ITEMS ---------- */
+.item{
+  background:var(--card);
+  padding:15px;
+  border-radius:14px;
+  margin-bottom:10px;
+  box-shadow:0 3px 10px rgba(0,0,0,.05);
+  cursor:pointer;
+  transition:.2s;
+  border:1px solid var(--border);
+}
+
+.item:hover{
+  transform:translateX(-5px);
+  box-shadow:0 5px 15px rgba(0,0,0,.08);
+}
+
+.item-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  margin-bottom:8px;
+}
+
+.item-name{
+  font-weight:600;
+  font-size:16px;
+  flex:1;
+}
+
+.item-category{
+  font-size:12px;
+  color:var(--muted);
+  margin:3px 0;
+}
+
+.item-footer{
+  display:flex;
+  justify-content:space-between;
+  margin-top:10px;
+  font-size:13px;
+  color:var(--muted);
+}
+
+/* ---------- NAVIGATION ---------- */
+.back{
+  background:none;
+  border:none;
+  color:var(--main);
+  font-size:15px;
+  margin-bottom:10px;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  gap:5px;
+  padding:8px 0;
+}
+
+.back:hover{
+  opacity:0.8;
+}
+
+/* ---------- BUTTONS ---------- */
+.btn{
+  padding:10px 14px;
+  border:none;
+  border-radius:12px;
+  background:var(--main);
+  color:#fff;
+  font-size:15px;
+  cursor:pointer;
+  transition:.2s;
+  font-weight:500;
+}
+
+.btn:hover{
+  background:#1d4ed8;
+  transform:translateY(-2px);
+}
+
+.btn-secondary{
+  background:var(--card);
+  color:var(--text);
+  border:2px solid var(--border);
+}
+
+.btn-secondary:hover{
+  background:var(--border);
+}
+
+.btn-group{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-top:15px;
+}
+
+.btn-group .btn{
+  margin:0;
+}
+
+/* ---------- DETAILS ---------- */
+.info{
+  margin:10px 0;
+  padding:10px 0;
+  border-bottom:1px solid var(--border);
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.info-icon{
+  font-size:18px;
+  opacity:0.7;
+}
+
+/* ---------- MAP ---------- */
+#map{
+  height:calc(100vh - 50px);
+}
+
+.route-info{
+  position:absolute;
+  top:60px;
+  left:15px;
+  right:15px;
+  background:white;
+  padding:15px;
+  border-radius:12px;
+  box-shadow:0 4px 20px rgba(0,0,0,0.2);
+  z-index:1000;
+  text-align:center;
+  font-weight:600;
+  color:#1f2937;
+}
+
+/* ---------- PWA INSTALL PROMPT ---------- */
+#installPrompt{
+  position:fixed;
+  bottom:20px;
+  left:20px;
+  right:20px;
+  background:var(--card);
+  padding:15px;
+  border-radius:12px;
+  box-shadow:0 8px 30px rgba(0,0,0,0.2);
+  z-index:9999;
+  display:none;
+  border:2px solid var(--main);
+}
+
+.install-buttons{
+  display:flex;
+  gap:10px;
+  margin-top:10px;
+}
+
+.install-btn{
+  flex:1;
+  padding:10px;
+  border:none;
+  border-radius:8px;
+  cursor:pointer;
+  font-weight:500;
+}
+
+.install-btn-primary{
+  background:var(--main);
+  color:white;
+}
+
+.install-btn-secondary{
+  background:var(--border);
+  color:var(--text);
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <div class="brand">
+    <img src="logo.png" alt="دليل الأماكن">
+    <div>دليل الأماكن</div>
+  </div>
+  <div class="header-buttons">
+    <a class="download-btn" href="https://www.mediafire.com/file/o14t2tqih64a5tf/DalilakApp1.1.2.apk/file" target="_blank" rel="noopener">حمل التطبيق</a>
+    <button class="theme-btn" onclick="go('home')">🏠</button>
+  </div>
+</header>
+
+<div class="welcome-bar">
+  <span class="welcome-text">اهلا بك في دليل الاماكن</span>
+</div>
+
+<!-- HOME -->
+<div id="home" class="page">
+  <h3>التصنيفات</h3>
+  
+  <!-- Search Box -->
+  <div class="search-container">
+    <input type="text" 
+           id="searchInput" 
+           class="search-box" 
+           placeholder="ابحث عن مكان باسمه...">
+    <button class="btn btn-secondary" id="searchBtn">🔍 بحث</button>
+    <div id="searchResults" class="search-results"></div>
+  </div>
+  
+  <div id="categories" class="grid"></div>
+</div>
+
+<!-- PLACES -->
+<div id="places" class="page hidden">
+  <button class="back" onclick="goBackFromPlaces()">⬅ رجوع</button>
+  <h3 id="placesTitle"></h3>
+  <div id="placesList" style="height:70vh;overflow-y:auto;"></div>
+</div>
+
+<!-- DETAILS -->
+<div id="details" class="page hidden">
+  <button class="back" onclick="goBackFromDetails()">⬅ رجوع</button>
+  <div class="details-card">
+    <h3 id="name"></h3>
+    <div id="statusBadge" style="margin:10px 0"></div>
+    
+    <div class="info">
+      <span class="info-icon">📁</span>
+      <span id="category"></span>
+    </div>
+    
+    <div class="info">
+      <span class="info-icon">📞</span>
+      <span id="phone"></span>
+    </div>
+    
+    <div class="info">
+      <span class="info-icon">🕒</span>
+      <span id="hours"></span>
+    </div>
+
+    <div class="info">
+      <span class="info-icon">📅</span>
+      <span id="workdays"></span>
+    </div>
+    
+    <div class="info">
+      <span class="info-icon">👁</span>
+      <span id="views"></span>
+    </div>
+    
+    <div class="btn-group">
+      <button class="btn" onclick="openMap()">🗺️ الذهاب للمكان</button>
+    </div>
+  </div>
+</div>
+
+<!-- MAP -->
+<div id="mapPage" class="page hidden">
+  <button class="back" onclick="go('details')" style="padding:10px">⬅ رجوع</button>
+  <div id="map"></div>
+</div>
+
+<!-- PWA INSTALL PROMPT -->
+<div id="installPrompt">
+  <strong>تثبيت تطبيق دليل الأماكن</strong>
+  <p>ثبّت التطبيق للوصول السريع والتجربة الأفضل</p>
+  <div class="install-buttons">
+    <button class="install-btn install-btn-primary" onclick="installApp()">✅ تثبيت</button>
+    <button class="install-btn install-btn-secondary" onclick="hideInstallPrompt()">✖️ لاحقاً</button>
+  </div>
+</div>
+
+<!-- SCRIPTS -->
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/backendless@7/dist/backendless.min.js"></script>
+
+<script>
+/* ================= CONFIG ================= */
+const BACKENDLESS_BASE_URL = "https://gallantquilt-us.backendless.app";
+const PLACES_ENDPOINT = `${BACKENDLESS_BASE_URL}/api/data/Place`;
+
+/* ================= STATE ================= */
+let currentCategory = null;
+let currentSubcategory = null;
+let currentPlaceId = null;
+let map;
+let allPlaces = [];
+let deferredPrompt = null;
+
+let page = 1;
+let pageSize = 10;
+let loading = false;
+let lastListPage = "home";
+let listMode = "categories";
+
+function getDamascusNow(){
+  const now = new Date();
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Asia/Damascus",
+    hour: "2-digit",
+    minute: "2-digit",
+    weekday: "long",
+    hour12: false
+  }).formatToParts(now);
+
+  const get = (type) => parts.find(p=>p.type===type)?.value || "";
+  return {
+    dayEn: get("weekday"),
+    time24: `${get("hour")}:${get("minute")}`
+  };
+}
+
+function normalizeDayName(name){
+  const n = String(name || "").trim().toLowerCase();
+  const map = {
+    "sunday": "الاحد",
+    "monday": "الاثنين",
+    "tuesday": "الثلاثاء",
+    "wednesday": "الاربعاء",
+    "thursday": "الخميس",
+    "friday": "الجمعة",
+    "saturday": "السبت",
+    "الأحد": "الاحد",
+    "اﻷحد": "الاحد",
+    "الاحد": "الاحد",
+    "الاثنين": "الاثنين",
+    "الإثنين": "الاثنين",
+    "الاثنين": "الاثنين",
+    "الثلاثاء": "الثلاثاء",
+    "الأربعاء": "الاربعاء",
+    "الاربعاء": "الاربعاء",
+    "الخميس": "الخميس",
+    "الجمعة": "الجمعة",
+    "السبت": "السبت"
+  };
+  return map[n] || n;
+}
+
+function parseWorkingDays(value){
+  if(!value) return [];
+  return String(value)
+    .split(/[,،-]+/)
+    .map(s=>normalizeDayName(s))
+    .filter(Boolean);
+}
+
+function timeToMinutes(t){
+  if(!t || typeof t !== "string") return null;
+  const trimmed = t.trim();
+  const m = trimmed.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?/);
+  if(!m) return null;
+  const hh = Number(m[1]);
+  const mm = Number(m[2]);
+  if(hh > 24 || mm > 59) return null;
+  if(hh === 24 && mm !== 0) return null;
+  return hh * 60 + mm;
+}
+
+function isOpenNow(place){
+  const workingDays = parseWorkingDays(place.workingDaysAsString);
+  const {dayEn, time24} = getDamascusNow();
+  const dayAr = normalizeDayName(dayEn);
+
+  if(workingDays.length && !workingDays.includes(dayAr)){
+    return false;
+  }
+
+  const openMinutes = timeToMinutes(place.openingTime);
+  const closeMinutes = timeToMinutes(place.closingTime);
+  const nowMinutes = timeToMinutes(time24);
+
+  if(openMinutes == null || closeMinutes == null || nowMinutes == null){
+    return false;
+  }
+
+  if(openMinutes === 0 && closeMinutes === 1440){
+    return true; // 00:00 -> 24:00
+  }
+
+  if(openMinutes === closeMinutes){
+    return true; // 24h
+  }
+
+  if(closeMinutes > openMinutes){
+    return nowMinutes >= openMinutes && nowMinutes < closeMinutes;
+  }
+
+  // Overnight shift (e.g., 20:00 -> 06:00)
+  return nowMinutes >= openMinutes || nowMinutes < closeMinutes;
+}
+
+function escapeWhereValue(value){
+  return String(value).replace(/'/g, "\\'");
+}
+
+function createQueryBuilder(pageSizeValue=20, pageNumber=1, whereClause=""){
+  const params = new URLSearchParams();
+  params.set("pageSize", String(pageSizeValue));
+  params.set("offset", String((pageNumber - 1) * pageSizeValue));
+  if(whereClause){
+    params.set("where", whereClause);
+  }
+  return params;
+}
+
+function findPlaces(pageSizeValue=20, pageNumber=1, whereClause=""){
+  const params = createQueryBuilder(pageSizeValue, pageNumber, whereClause);
+  return fetch(`${PLACES_ENDPOINT}?${params.toString()}`).then(r=>r.json());
+}
+
+function findPlaceById(id){
+  return fetch(`${PLACES_ENDPOINT}/${encodeURIComponent(id)}`).then(r=>r.json());
+}
+
+function updatePlaceFields(id, payload){
+  return fetch(`${PLACES_ENDPOINT}/${encodeURIComponent(id)}`, {
+    method: "PUT",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify(payload)
+  }).then(r=>r.json());
+}
+
+/* ================= PWA INSTALL PROMPT ================= */
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  
+  setTimeout(() => {
+    if(!localStorage.getItem('installPromptShown')) {
+      document.getElementById('installPrompt').style.display = 'block';
+    }
+  }, 3000);
+});
+
+function installApp() {
+  if(deferredPrompt) {
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then((choiceResult) => {
+      if(choiceResult.outcome === 'accepted') {
+        console.log('تم تثبيت التطبيق');
+      }
+      deferredPrompt = null;
+    });
+  }
+  hideInstallPrompt();
+}
+
+function hideInstallPrompt() {
+  document.getElementById('installPrompt').style.display = 'none';
+  localStorage.setItem('installPromptShown', 'true');
+}
+
+/* ================= CATEGORIES DATA ================= */
+const categories = {
+  'أطباء': ["عام", "داخلية", "عظمية", "أطفال", "عصبية", "أسنان","أنف وأذن وحنجرة","نسائية","عيون","نفسي","هضمية","صدرية","تغذية","بولية"],
+  'مطاعم': ['فروج وشاورما', 'حمص وفول', 'مندي وأرز', 'شاملة','مطعم وكافيه', 'وجبات سريعة', 'فلافل', 'بيتزا ومعجنات', 'شاورما'],
+  'البسة': ["جميع الالبسة", "رجالي", "نسائي", "أطفال", "لانجري"],
+  'لحوم': ['دجاج', 'خاروف', 'جمل', 'عجل', 'سمك', 'فروج وسمك'],
+  'صالون حلاقة': ['رجالي', 'نسائي'],
+  'صيدليات': [],
+  'مواد غذائية': [],
+  'خضار وفواكه': [],
+  'أحذية': [],
+  'روضة اطفال': [],
+  'محلات قماش': [],
+  'مفروشات': [],
+  'قطع غيار': ['سيارات', 'دراجات نارية', 'دراجات كهربائية'],
+  'مطبعة': [],
+  'مكتبة': [],
+  'اعلاف': [],
+  'خردوات': [],
+  'مطابخ والمنيوم': [],
+  'معرض سيارات': [],
+  'محطة محروقات': [],
+  'محلات صيانة': ['هواتف', 'اجهزة منزلية', 'غسالات', 'مكيفات'],
+  'محلات أدوات كهربائية': [],
+  'حلويات وبوظة': [],
+  'معدات صناعية': [],
+  'محامين': [],
+  'مكاتب عقارية': [],
+  'شركة حوالات': [],
+  'مغسل ومشحم': [],
+  'كومجي': [],
+  'ميكانيكي': ['بنزين', 'ديزل'],
+  'مواد ديكور': [],
+  'مخبر طبي': [],
+  'أجهزة إلكترونية': [],
+  'هواتف جوالة': [],
+  'مستلزمات كهربائية': [],
+  'صالونات تجميل': [],
+  'محلات ذهب': [],
+  'كوفي شوب': [],
+  'مستشفيات': [],
+  'محلات هواتف': [],
+  'محلات كمبيوتر': [],
+  'محلات خياطة': [],
+  'محلّات تحف': [],
+  'محلّات ساعات': [],
+  'مكاتب سياحية': [],
+  'مراكز تعليمية': [],
+  'صالات مناسبات': [],
+  'محلات لوازم أطفال': [],
+  'محلات لوازم حدائق': [],
+  'محلات أدوات صحية': [],
+  'محلات دهانات': [],
+  'محلّات أجهزة كهربائية': [],
+  'محلات نظارات': [],
+  'محلات حلويات عربية': [],
+  'مقاهي إنترنت': [],
+  'صالات رياضية': [],
+  'محلات حيوانات أليفة': [],
+  'مكاتب هندسية': [],
+  'مكاتب محاسبة': [],
+  'محلات أدوات مكتبية': []
+};
+
+const categoryIcons = {
+  'أطباء': '🩺',
+  'مطاعم': '🍽️',
+  'البسة': '👕',
+  'لحوم': '🥩',
+  'صالون حلاقة': '💈',
+  'صيدليات': '💊',
+  'مواد غذائية': '🛒',
+  'خضار وفواكه': '🥬',
+  'أحذية': '👞',
+  'روضة اطفال': '🧸',
+  'محلات قماش': '🧵',
+  'مفروشات': '🛋️',
+  'قطع غيار': '🧰',
+  'مطبعة': '🖨️',
+  'مكتبة': '📚',
+  'اعلاف': '🌾',
+  'خردوات': '🔩',
+  'مطابخ والمنيوم': '🍳',
+  'معرض سيارات': '🚗',
+  'محطة محروقات': '⛽',
+  'محلات صيانة': '🛠️',
+  'محلات أدوات كهربائية': '🔌',
+  'حلويات وبوظة': '🍨',
+  'معدات صناعية': '🏭',
+  'محامين': '⚖️',
+  'مكاتب عقارية': '🏠',
+  'شركة حوالات': '💸',
+  'مغسل ومشحم': '🧽',
+  'كومجي': '🧵',
+  'ميكانيكي': '🔧',
+  'مواد ديكور': '🖼️',
+  'مخبر طبي': '🧪',
+  'أجهزة إلكترونية': '📟',
+  'هواتف جوالة': '📱',
+  'مستلزمات كهربائية': '💡',
+  'صالونات تجميل': '💅',
+  'محلات ذهب': '💎',
+  'كوفي شوب': '☕',
+  'مستشفيات': '🏥',
+  'محلات هواتف': '📱',
+  'محلات كمبيوتر': '💻',
+  'محلات خياطة': '🪡',
+  'محلّات تحف': '🗿',
+  'محلّات ساعات': '⌚',
+  'مكاتب سياحية': '🧳',
+  'مراكز تعليمية': '🎓',
+  'صالات مناسبات': '🎉',
+  'محلات لوازم أطفال': '🍼',
+  'محلات لوازم حدائق': '🌿',
+  'محلات أدوات صحية': '🚿',
+  'محلات دهانات': '🎨',
+  'محلّات أجهزة كهربائية': '🔌',
+  'محلات نظارات': '👓',
+  'محلات حلويات عربية': '🍮',
+  'مقاهي إنترنت': '🖥️',
+  'صالات رياضية': '🏋️',
+  'محلات حيوانات أليفة': '🐾',
+  'مكاتب هندسية': '📐',
+  'مكاتب محاسبة': '🧾',
+  'محلات أدوات مكتبية': '🖊️'
+};
+
+/* ================= NAVIGATION ================= */
+function go(pageId){
+  document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
+  document.getElementById(pageId).classList.remove('hidden');
+}
+
+function goBackFromDetails(){
+  go(lastListPage || "home");
+}
+
+function goBackFromPlaces(){
+  if(currentCategory && currentSubcategory && Array.isArray(categories[currentCategory]) && categories[currentCategory].length){
+    loadSubcategories(currentCategory);
+    return;
+  }
+  go("home");
+}
+
+/* ================= THEME ================= */
+/* ================= SEARCH ================= */
+function setupSearch(){
+  const searchInput = document.getElementById("searchInput");
+  const searchResults = document.getElementById("searchResults");
+  const searchBtn = document.getElementById("searchBtn");
+
+  searchBtn.addEventListener("click", function(){
+    const query = searchInput.value.trim();
+    if(query.length < 2){
+      alert("الرجاء إدخال 2 أحرف على الأقل للبحث");
+      return;
+    }
+    searchPlacesAPI(query);
+  });
+
+  searchInput.addEventListener("keydown", function(e){
+    if(e.key === "Enter"){
+      const query = searchInput.value.trim();
+      if(query.length < 2){
+        alert("الرجاء إدخال 2 أحرف على الأقل للبحث");
+        return;
+      }
+      searchPlacesAPI(query);
+    }
+  });
+
+  document.addEventListener("click", function(e){
+    if(!searchResults.contains(e.target) && e.target !== searchInput && e.target !== searchBtn){
+      searchResults.style.display = "none";
+    }
+  });
+}
+
+function searchPlacesAPI(query){
+  const searchResults = document.getElementById("searchResults");
+  searchResults.innerHTML = "";
+  searchResults.style.display = "block";
+
+  const where = `name LIKE '%${escapeWhereValue(query)}%'`;
+  findPlaces(20, 1, where)
+  .then(data=>{
+    if(Array.isArray(data) && data.length===0){
+      searchResults.innerHTML = '<div class="search-result-item">لا توجد نتائج</div>';
+      return;
+    }
+    if(data && !Array.isArray(data) && data.message){
+      searchResults.innerHTML = `<div class="search-result-item">خطأ: ${data.message}</div>`;
+      return;
+    }
+    if(!Array.isArray(data)){
+      searchResults.innerHTML = '<div class="search-result-item">خطأ في استجابة الخادم</div>';
+      return;
+    }
+
+    data.forEach(p=>{
+      const div = document.createElement("div");
+      div.className = "search-result-item";
+      div.innerHTML = `<strong>${p.name}</strong>
+                       <div class="search-result-category">${p.Categoriestype || p.category}</div>`;
+      div.onclick = ()=>{
+        lastListPage = "home";
+        loadDetails(p.objectId || p.id);
+        searchResults.style.display = "none";
+      }
+      searchResults.appendChild(div);
+    });
+  })
+  .catch(err=>{
+    console.error(err);
+    searchResults.innerHTML = '<div class="search-result-item">تعذر الاتصال بالخادم</div>';
+  });
+}
+
+/* ================= CATEGORIES ================= */
+function loadCategories(){
+  const container = document.getElementById("categories");
+  container.innerHTML = "";
+
+  Object.keys(categories).forEach(cat=>{
+    const icon = categoryIcons[cat] || '📌';
+    const card = document.createElement("div");
+    card.className = "card";
+    card.innerHTML = `<div class="card-icon">${icon}</div><div>${cat}</div>`;
+    card.onclick = ()=>{
+      if(categories[cat].length>0){
+        loadSubcategories(cat);
+      } else {
+        page=1;
+        loadPlaces(cat);
+      }
+    };
+    container.appendChild(card);
+  });
+}
+
+function loadSubcategories(cat){
+  currentCategory = cat;
+  currentSubcategory = null;
+  listMode = "subcategories";
+  const subGrid = document.createElement("div");
+  subGrid.className = "subcategory-grid";
+  categories[cat].forEach(sub=>{
+    const subCard = document.createElement("div");
+    subCard.className = "card";
+    subCard.textContent = sub;
+    subCard.onclick = ()=>{
+      page=1;
+      currentSubcategory=sub;
+      loadPlaces(cat, sub);
+    };
+    subGrid.appendChild(subCard);
+  });
+  go('places');
+  const title = document.getElementById("placesTitle");
+  title.textContent = `التصنيف الفرعي لـ ${cat}`;
+  const list = document.getElementById("placesList");
+  list.classList.remove("places-grid");
+  list.innerHTML = "";
+  list.appendChild(subGrid);
+}
+
+/* ================= PLACES ================= */
+function loadPlaces(cat, subcat=null, append=false){
+  currentCategory = cat;
+  currentSubcategory = subcat;
+  lastListPage = "places";
+  listMode = "places";
+  go("places");
+
+  const title = subcat ? `${cat} - ${subcat}` : cat;
+  document.getElementById("placesTitle").textContent = title;
+
+  const list = document.getElementById("placesList");
+  list.classList.add("places-grid");
+  if(!append) list.innerHTML="";
+
+  if(!append){
+    for(let i=0;i<3;i++){
+      const skeleton = document.createElement("div");
+      skeleton.className="item skeleton skeleton-item";
+      list.appendChild(skeleton);
+    }
+  }
+
+  const whereParts = [`category='${escapeWhereValue(cat)}'`];
+  if(subcat) whereParts.push(`Categoriestype='${escapeWhereValue(subcat)}'`);
+  const where = whereParts.join(" AND ");
+
+  loading=true;
+
+  findPlaces(pageSize, page, where)
+  .then(data=>{
+    loading=false;
+    if(!append) list.innerHTML="";
+    if(data.length===0 && !append){
+      const emptyMsg = document.createElement("div");
+      emptyMsg.className="item";
+      emptyMsg.style.textAlign="center";
+      emptyMsg.innerHTML="لا توجد أماكن في هذا التصنيف حالياً";
+      list.appendChild(emptyMsg);
+      return;
+    }
+    allPlaces = append ? allPlaces.concat(data) : data;
+
+    data.forEach(p=>{
+      const div=createPlaceItem(p, cat);
+      div.onclick=()=>loadDetails(p.objectId || p.id);
+      list.appendChild(div);
+    });
+  })
+  .catch(err=>{
+    loading=false;
+    console.error(err);
+  });
+}
+
+function createPlaceItem(place, cat){
+  const div = document.createElement("div");
+  div.className="item";
+
+  const isOpen = isOpenNow(place);
+  const subName = place.Categoriestype || currentSubcategory || "";
+
+  div.innerHTML=`
+    <div class="item-name">${place.name}</div>
+    <div class="item-status">
+      <span class="badge ${isOpen ? 'badge-open':'badge-closed'}">
+        ${isOpen ? '🟢 مفتوح':'🔴 مغلق'}
+      </span>
+    </div>
+    <div class="item-footer">
+      <span>👁 ${place.views || 0}</span>
+    </div>
+  `;
+  return div;
+}
+
+document.getElementById("placesList").addEventListener("scroll", function(){
+  const el = this;
+  if(listMode !== "places") return;
+  if(!loading && el.scrollTop + el.clientHeight >= el.scrollHeight-50){
+    page++;
+    loadPlaces(currentCategory, currentSubcategory, true);
+  }
+});
+
+/* ================= DETAILS ================= */
+function loadDetails(id){
+  currentPlaceId=id;
+  findPlaceById(id)
+  .then(p=>{
+    const opening = p.openingTime || p.opening || p.open || "";
+    const closing = p.closingTime || p.closing || p.close || "";
+    const hoursValue =
+      (opening || closing)
+        ? `${opening || "-"} - ${closing || "-"}`
+        : (p.hours || p.workingHours || p.openingHours || p.workHours || "-");
+    const workdaysValue = p.workdays || p.workingDays || p.workDays || p.days || p.businessDays || "-";
+    const currentViews = Number(p.views || 0);
+    const nextViews = currentViews + 1;
+
+    go("details");
+    document.getElementById("name").textContent=p.name;
+    const openNow = isOpenNow(p);
+    document.getElementById("statusBadge").innerHTML = `<span class="badge ${openNow?'badge-open':'badge-closed'}">${openNow?'🟢 مفتوح':'🔴 مغلق'}</span>`;
+    document.getElementById("category").textContent = `${p.Categoriestype || currentSubcategory || ''}${p.category ? ` - ${p.category || currentCategory}` : ''}`;
+    document.getElementById("phone").textContent=p.phone||'-';
+    document.getElementById("hours").textContent=hoursValue;
+    document.getElementById("workdays").textContent=workdaysValue;
+    document.getElementById("views").textContent=String(nextViews);
+
+    updatePlaceFields(id, {views: nextViews}).catch(console.error);
+  })
+  .catch(console.error);
+}
+
+/* ================= MAP ================= */
+function openMap(){
+  go("mapPage");
+  findPlaceById(currentPlaceId)
+  .then(p=>{
+    const lat=p.lat ?? p.latitude ?? 0;
+    const lng=p.lng ?? p.longitude ?? 0;
+    if(map) map.remove();
+    map = L.map('map').setView([lat,lng],16);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+      attribution:'&copy; OpenStreetMap contributors'
+    }).addTo(map);
+    L.marker([lat,lng]).addTo(map).bindPopup(p.name).openPopup();
+    setTimeout(()=>map.invalidateSize(), 0);
+  });
+}
+
+/* ================= INIT ================= */
+setupSearch();
+loadCategories();
+</script>
+
+</body>
+</html>
