@@ -193,11 +193,14 @@ header{
   .search-box{
     font-size:14px;
     padding:12px 14px;
+    flex:1 1 100%;
+    max-width:100%;
   }
 
   .btn{
     font-size:14px;
     padding:9px 12px;
+    width:100%;
   }
 }
 
@@ -230,10 +233,11 @@ header{
   position:relative;
   display:flex;
   gap:10px;
+  flex-wrap:wrap;
 }
 
 .search-box{
-  flex:1;
+  flex:1 1 200px;
   padding:14px 20px;
   border:2px solid var(--border);
   border-radius:12px;
@@ -241,6 +245,7 @@ header{
   background:var(--card);
   color:var(--text);
   transition:.2s;
+  min-width:0;
 }
 
 .search-box:focus{
