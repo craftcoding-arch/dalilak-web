@@ -97,14 +97,113 @@ header{
 
 .welcome-text{
   display:inline-block;
-  animation:welcome-marquee 12s linear infinite;
+  animation:welcome-marquee-rtl 18s linear infinite;
+  will-change:transform;
 }
 
-@keyframes welcome-marquee{
+@keyframes welcome-marquee-rtl{
   0%{transform:translateX(100%)}
   100%{transform:translateX(-100%)}
 }
 
+.welcome-bar.secondary{
+  background:rgba(255,255,255,0.04);
+  font-size:13px;
+}
+
+.welcome-actions{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  padding:6px 12px 10px;
+  border-bottom:1px solid rgba(255,255,255,0.12);
+}
+
+.whatsapp-btn{
+  background:#22c55e;
+  color:#0b1f12;
+  border:none;
+  padding:6px 12px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:700;
+  text-decoration:none;
+}
+
+.whatsapp-btn:hover{
+  opacity:0.9;
+}
+
+.modal-backdrop{
+  position:fixed;
+  top:0;
+  left:0;
+  right:0;
+  bottom:0;
+  background:rgba(0,0,0,0.6);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:9998;
+  padding:16px;
+}
+
+.modal{
+  width:100%;
+  max-width:420px;
+  background:var(--card);
+  border:2px solid var(--border);
+  border-radius:16px;
+  padding:16px;
+  box-shadow:0 10px 30px rgba(0,0,0,0.35);
+}
+
+.modal-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:10px;
+}
+
+.modal-title{
+  font-size:16px;
+  font-weight:700;
+}
+
+.modal-close{
+  background:transparent;
+  border:none;
+  color:var(--text);
+  font-size:18px;
+  cursor:pointer;
+}
+
+.plan-list{
+  display:flex;
+  flex-direction:row-reverse;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+.plan-btn{
+  width:100%;
+  border:2px solid var(--border);
+  background:var(--card);
+  color:var(--text);
+  padding:14px 12px;
+  border-radius:14px;
+  cursor:pointer;
+  font-weight:700;
+  text-align:center;
+  box-shadow:0 4px 12px rgba(0,0,0,0.12);
+}
+
+.plan-btn:hover{
+  border-color:var(--main);
+  background:rgba(37,99,235,0.08);
+  transform:translateY(-2px);
+}
 .theme-btn{
   background:rgba(255,255,255,0.2);
   border:none;
@@ -581,12 +680,30 @@ header{
   </div>
   <div class="header-buttons">
     <a class="download-btn" id="downloadBtn" href="#" target="_blank" rel="noopener">حمل التطبيق</a>
+    <button class="whatsapp-btn" type="button" onclick="openPlanModal()">واتس</button>
     <button class="theme-btn" onclick="go('home')"><i class="fa-solid fa-house"></i></button>
   </div>
 </header>
 
 <div class="welcome-bar">
   <span class="welcome-text" id="welcomeText">اهلا بك في دليل الاماكن في منطقة دوما</span>
+</div>
+<div class="welcome-bar secondary">
+  <span class="welcome-text">لاضافة مكانك الى قائمة الاماكن يرجى التواصل مع الادراة عبر رقم الواتس في الاعلى</span>
+</div>
+
+<div class="modal-backdrop" id="planModal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="planTitle">
+    <div class="modal-header">
+      <div class="modal-title" id="planTitle">اختر الخطة</div>
+      <button class="modal-close" type="button" onclick="closePlanModal()">✖</button>
+    </div>
+    <div class="plan-list">
+      <button class="plan-btn" type="button" onclick="sendWhatsApp('الخطة الاولى مجانية لمدة 2 اشهر')">الخطة الاولى مجانية لمدة 2 اشهر</button>
+      <button class="plan-btn" type="button" onclick="sendWhatsApp('الخطة الثانية لمدة 6 اشهر بمبلغ 8 دولار اميركي')">الخطة الثانية لمدة 6 اشهر بمبلغ 8 دولار اميركي</button>
+      <button class="plan-btn" type="button" onclick="sendWhatsApp('الخطة الثالثة لمدة 12 شهر بمبلغ 15 دولار امريكي')">الخطة الثالثة لمدة 12 شهر بمبلغ 15 دولار امريكي</button>
+    </div>
+  </div>
 </div>
 
 <!-- HOME -->
@@ -653,7 +770,7 @@ header{
 
 <!-- MAP -->
 <div id="mapPage" class="page hidden">
-  <button class="back" onclick="go('details')" style="padding:10px">⬅ رجوع</button>
+  <button class="back" onclick="history.back()" style="padding:10px">⬅ رجوع</button>
   <div id="map"></div>
 </div>
 
@@ -682,6 +799,8 @@ let currentCategory = null;
 let currentSubcategory = null;
 let currentPlaceId = null;
 let map;
+let userMarker;
+let routeLine;
 let allPlaces = [];
 let deferredPrompt = null;
 
@@ -825,6 +944,24 @@ function updatePlaceFields(id, payload){
   }).then(r=>r.json());
 }
 
+function openPlanModal(){
+  const modal = document.getElementById("planModal");
+  if(modal) modal.style.display = "flex";
+}
+
+function closePlanModal(){
+  const modal = document.getElementById("planModal");
+  if(modal) modal.style.display = "none";
+}
+
+function sendWhatsApp(planText){
+  const baseMessage = "نأمل منكم إدراج مكاني ضمن الموقع، والاستفادة من العرض المتاح. شاكرين لكم تعاونكم ودعمكم المستمر.";
+  const fullMessage = `${baseMessage} - ${planText}`;
+  const url = `https://wa.me/963994817003?text=${encodeURIComponent(fullMessage)}`;
+  closePlanModal();
+  window.open(url, "_blank");
+}
+
 /* ================= PWA INSTALL PROMPT ================= */
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
@@ -854,6 +991,12 @@ function hideInstallPrompt() {
   document.getElementById('installPrompt').style.display = 'none';
   localStorage.setItem('installPromptShown', 'true');
 }
+
+document.addEventListener("click", function(e){
+  const modal = document.getElementById("planModal");
+  if(!modal || modal.style.display !== "flex") return;
+  if(e.target === modal) closePlanModal();
+});
 
 /* ================= CATEGORIES DATA ================= */
 const categories = {
@@ -1221,10 +1364,8 @@ document.getElementById("placesList").addEventListener("scroll", function(){
 
 // Initialize history state for proper back navigation
 (function initHistory(){
-  const hashPage = location.hash ? location.hash.replace("#","") : "";
-  const initialPage = (hashPage && document.getElementById(hashPage)) ? hashPage : "home";
-  history.replaceState({page: initialPage}, "", `#${initialPage}`);
-  go(initialPage, false);
+  history.replaceState({page: "home"}, "", "#home");
+  go("home", false);
 })();
 
 /* ================= DETAILS ================= */
@@ -1273,6 +1414,28 @@ function openMap(){
     }).addTo(map);
     L.marker([lat,lng]).addTo(map).bindPopup(p.name).openPopup();
     setTimeout(()=>map.invalidateSize(), 0);
+
+    if("geolocation" in navigator){
+      navigator.geolocation.getCurrentPosition((pos)=>{
+        const uLat = pos.coords.latitude;
+        const uLng = pos.coords.longitude;
+        if(userMarker) userMarker.remove();
+        userMarker = L.marker([uLat, uLng]).addTo(map).bindPopup("موقعك الحالي");
+
+        if(routeLine) routeLine.remove();
+        const url = `https://router.project-osrm.org/route/v1/driving/${uLng},${uLat};${lng},${lat}?overview=full&geometries=geojson`;
+        fetch(url)
+          .then(r=>r.json())
+          .then(data=>{
+            if(!data.routes || !data.routes[0]) return;
+            const coords = data.routes[0].geometry.coordinates.map(([x,y])=>[y,x]);
+            routeLine = L.polyline(coords, {color:"#22c55e", weight:4}).addTo(map);
+            const bounds = routeLine.getBounds();
+            map.fitBounds(bounds, {padding:[20,20]});
+          })
+          .catch(console.error);
+      });
+    }
   });
 }
 
