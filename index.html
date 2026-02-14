@@ -599,12 +599,6 @@ header{
            id="searchInput" 
            class="search-box" 
            placeholder="ابحث عن مكان باسمه...">
-    <select id="areaSelect" class="search-box" style="max-width:140px;">
-      <option value="">كل المناطق</option>
-      <option value="دوما">دوما</option>
-      <option value="حرستا">حرستا</option>
-      <option value="مسرابا">مسرابا</option>
-    </select>
     <button class="btn btn-secondary" id="searchBtn"><i class="fa-solid fa-magnifying-glass"></i> بحث</button>
     <div id="searchResults" class="search-results"></div>
   </div>
@@ -696,7 +690,6 @@ let pageSize = 10;
 let loading = false;
 let lastListPage = "home";
 let listMode = "categories";
-let selectedArea = "";
 
 function getDamascusNow(){
   const now = new Date();
@@ -1014,7 +1007,6 @@ function setupSearch(){
   const searchInput = document.getElementById("searchInput");
   const searchResults = document.getElementById("searchResults");
   const searchBtn = document.getElementById("searchBtn");
-  const areaSelect = document.getElementById("areaSelect");
 
   searchBtn.addEventListener("click", function(){
     const query = searchInput.value.trim();
@@ -1042,13 +1034,6 @@ function setupSearch(){
     }
   });
 
-  areaSelect.addEventListener("change", function(){
-    selectedArea = this.value.trim();
-    if(listMode === "places" && currentCategory){
-      page = 1;
-      loadPlaces(currentCategory, currentSubcategory);
-    }
-  });
 }
 
 function searchPlacesAPI(query){
@@ -1056,11 +1041,7 @@ function searchPlacesAPI(query){
   searchResults.innerHTML = "";
   searchResults.style.display = "block";
 
-  const whereParts = [`name LIKE '%${escapeWhereValue(query)}%'`];
-  if(selectedArea){
-    whereParts.push(`area='${escapeWhereValue(selectedArea)}'`);
-  }
-  const where = whereParts.join(" AND ");
+  const where = `name LIKE '%${escapeWhereValue(query)}%'`;
   findPlaces(20, 1, where)
   .then(data=>{
     if(Array.isArray(data) && data.length===0){
@@ -1178,7 +1159,6 @@ function loadPlaces(cat, subcat=null, append=false, push=true){
 
   const whereParts = [`category='${escapeWhereValue(cat)}'`];
   if(subcat) whereParts.push(`Categoriestype='${escapeWhereValue(subcat)}'`);
-  if(selectedArea) whereParts.push(`area='${escapeWhereValue(selectedArea)}'`);
   const where = whereParts.join(" AND ");
 
   loading=true;
